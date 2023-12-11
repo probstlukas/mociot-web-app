@@ -1,6 +1,21 @@
-.maze {
+#maze {
   position: relative;
-  width: 300px;
-  height: 300px;
+  width: 350px;
+  height: 315px;
   background-color: beige;
+}
+
+body {
+  --ball-color: red;
+}
+
+.ball {
+  position: absolute;
+  /* Negative margin, so that the position of the ball will represent the center of the ball instead of the top-left corner of the HTML element */
+  margin-top: -5px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background-color: var(--ball-color);
+  width: 10px;  
+  height: 10px;
 }
