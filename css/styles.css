@@ -1,21 +1,89 @@
-#maze {
-  position: relative;
-  width: 350px;
-  height: 315px;
-  background-color: beige;
+body {
+    --background-color: white;
+    --ball-color: red;
+    --wall-color: black;
+    --end-color : green;
+    background-color: var(--background-color);
 }
 
+html,
 body {
-  --ball-color: red;
+    height: 100%;
+    margin: 0;
+}
+
+#center {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+#maze {
+    position: relative;
+    grid-row: 1 / -1;
+    grid-column: 1;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#end {
+    width: 75px;
+    height: 75px;
+    border: 5px dashed var(--end-color);
+    border-radius: 25%;
+    animation: glow 1.5s ease-in-out infinite alternate;
+    box-sizing: border-box;
+}
+
+/* Keyframes for the glow effect */
+@keyframes glow {
+    from {
+        box-shadow: inset 0 0 5px 0 var(--end-color); /* Initial box-shadow (inset) */
+    }
+    to {
+        box-shadow: inset 0 0 20px 5px var(--end-color); /* Final box-shadow for glowing effect (inset) */
+    }
 }
 
 .ball {
-  position: absolute;
-  /* Negative margin, so that the position of the ball will represent the center of the ball instead of the top-left corner of the HTML element */
-  margin-top: -5px;
-  margin-left: -5px;
-  border-radius: 50%;
-  background-color: var(--ball-color);
-  width: 10px;  
-  height: 10px;
+    position: absolute;
+    /* Negative margin, so that the position of the ball will represent the center of the ball instead of the top-left corner of the HTML element */
+    margin-top: -5px;
+    margin-left: -5px;
+    border-radius: 50%;
+    background-color: var(--ball-color);
+    width: 10px;  
+    height: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    
+}
+
+.wall {
+    position: absolute;
+    background-color: var(--wall-color);
+    transform-origin: top center;
+    margin-left: -5px;
+}
+
+.wall::before,
+.wall::after {
+    display: block;
+    content: "";
+    width: 10px;
+    height: 10px;
+    background-color: inherit;
+    position: absolute;
+}
+
+.wall::before {
+    top: -5px;
+}
+
+.wall::after {
+    bottom: -5px;
 }
