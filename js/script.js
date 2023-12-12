@@ -1,10 +1,10 @@
+/* Layout  */
+
 const mazeElement = document.getElementById("maze");
 const ballElements = [];
 
 const pathWidth = 30;
 const wallWidth = 10;
-
-/* Implementation of balls  */
 
 // Balls in the maze
 const balls = [
@@ -155,4 +155,36 @@ walls.forEach(({ x, y, horizontal, length }) => {
     wall.style.transform = `rotate(${horizontal ? -90 : 0}deg)`;
 
     mazeElement.appendChild(wall);
+});
+
+/* Accelerometer logic */
+
+// Accelerometer logic
+function getAccel() {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+            .then(permissionState => {
+                if (permissionState === 'granted') {
+                    // Add a listener to get smartphone orientation 
+                    // in the alpha-beta-gamma axes (units in degrees)
+                    window.addEventListener('deviceorientation', (event) => {
+                        // Your existing code to handle orientation data
+                    });
+                } else {
+                    alert('Accelerometer permission not granted');
+                }
+            })
+            .catch(console.error);
+    } else {
+        // Non-iOS devices or browsers that don't require permission
+        window.addEventListener('deviceorientation', (event) => {
+            
+        });
+    }
+}
+
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach the getAccel function to the button click event
+    document.getElementById('accelPermsButton').addEventListener('click', getAccel);
 });
