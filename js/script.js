@@ -159,32 +159,52 @@ walls.forEach(({ x, y, horizontal, length }) => {
 
 /* Accelerometer logic */
 
-// Accelerometer logic
+const sensitivity = 0.1; // Adjust based on testing
+const updateRate = 1/60; // Update rate for the game
+
+function handleDeviceOrientation(event) {
+    var tiltLR = event.gamma;
+    var tiltFB = event.beta;
+
+    balls.forEach((ball, index) => {
+        // Update velocity based on tilt
+        ball.velocityX += tiltLR * sensitivity;
+        ball.velocityY += tiltFB * sensitivity;
+
+        // Update position
+        ball.x += ball.velocityX * updateRate;
+        ball.y += ball.velocityY * updateRate;
+
+        // Collision detection and position correction
+        // TODO: Implement logic to prevent the ball from moving through walls
+
+        // Update ball position in the DOM
+        var ballElement = ballElements[index]; // Assuming ballElements are already linked to DOM elements
+        ballElement.style.left = ball.x + 'px';
+        ballElement.style.top = ball.y + 'px';
+    });
+
+    // Check for win/lose conditions
+    // TODO: Implement game win/lose logic
+}
+
 function getAccel() {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
             .then(permissionState => {
                 if (permissionState === 'granted') {
-                    // Add a listener to get smartphone orientation 
-                    // in the alpha-beta-gamma axes (units in degrees)
-                    window.addEventListener('deviceorientation', (event) => {
-                        // Your existing code to handle orientation data
-                    });
+                    window.addEventListener('deviceorientation', handleDeviceOrientation);
                 } else {
                     alert('Accelerometer permission not granted');
                 }
             })
             .catch(console.error);
     } else {
-        // Non-iOS devices or browsers that don't require permission
-        window.addEventListener('deviceorientation', (event) => {
-            
-        });
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
     }
 }
 
-// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Attach the getAccel function to the button click event
     document.getElementById('accelPermsButton').addEventListener('click', getAccel);
 });
+
