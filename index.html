@@ -24,17 +24,27 @@
     <!-- Area for visible information -->
     <body>
         <main>
+            <!-- Needed for iOS devices -->
+            <button id="accelPermsButton">Get Accelerometer Permissions</button>
             <div id="center">
-                <!-- Needed for iOS devices -->
-                <button id="accelPermsButton" onclick="getAccel()" style="height:50px;">Get Accelerometer Permissions</button>
                 <div id="game-container">
                     <div id="maze">
                         <div id="end"></div>
+                    </div>
+                    <div id="controls">
+                        <div id="button-container">
+                            <div id="start">Start</div>
+                            <div id="reset">Reset</div>
+                        </div>
+                        <div id="note">
+                            Move every ball to the center to win the game.
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     
+        <!-- Files to be included -->
         <script src="js/script.js"></script>
     </body>
 </html>
