@@ -20,12 +20,6 @@ let ballElements = [];
 // Reset game at the beginning
 resetGame();
 
-// For debugging purposes using the note container
-function debug(message) {
-    noteElement.style.opacity = 1.0;
-    noteElement.innerHTML = message;
-}
-
 /* 
 Defines a Math.minmax function that clamps a value within a symmetric range around zero.
 This function ensures that the given value does not exceed the specified limit or its negative.
@@ -254,6 +248,9 @@ walls.forEach(({ x, y, horizontal, length }) => {
 // var lastTiltLR = 0;
 // var lastTiltFB = 0;
 // var smoothingFactor = 0.1; // Adjust this value based on testing
+/*
+Determines the ball's movement based on the device's tilt
+*/
 function handleDeviceOrientation(event) {
     var tiltLR = event.gamma; // Left/Right tilt in degrees
     var tiltFB = event.beta;  // Front/Back tilt in degrees
@@ -282,8 +279,8 @@ function handleDeviceOrientation(event) {
     }
 
     // Gravity and friction
-    const gravity = 2; // Gravity factor
-    const friction = 0.01; // Coefficients of friction
+    const gravity = 0.1; // Gravity factor
+    const friction = 0.001; // Coefficients of friction
 
     // Calculate friction based on tilt
     accelerationX = gravity * Math.sin((rotationY / 180) * Math.PI);
@@ -395,10 +392,11 @@ function main(timestamp) {
         return;
     }
 
-    const maxVelocity = 1.5;
+    const maxVelocity = 0.5;
 
-    // Time passed since last cycle divided by 16
-    // This function gets called every 16 ms on average so dividing by 16 will result in 1
+    // Calculates the time elapsed since the last update cycle in terms of 'frame units'.
+    // Dividing the actual time elapsed (in ms) by 16 normalizes the value, so that
+    // a value of 1 represents the expected duration of a single frame (16 ms).
     const timeElapsed = (timestamp - previousTimestamp) / 16;
     
     if (accelerationX != undefined && accelerationY != undefined) {
@@ -415,8 +413,7 @@ function main(timestamp) {
             } else {
                 ball.velocityX = ball.velocityX + velocityChangeX;
                 ball.velocityX = Math.max(Math.min(ball.velocityX, 1.5), -1.5);
-                ball.velocityX =
-                    ball.velocityX - Math.sign(velocityChangeX) * frictionDeltaX;
+                ball.velocityX = ball.velocityX - Math.sign(velocityChangeX) * frictionDeltaX;
                 ball.velocityX = Math.minmax(ball.velocityX, maxVelocity);
             }
 
@@ -436,10 +433,9 @@ function main(timestamp) {
             ball.nextX = ball.x + ball.velocityX;
             ball.nextY = ball.y + ball.velocityY;
 
-            walls.forEach((wall, wi) => {
+            walls.forEach((wall) => {
                 if (wall.horizontal) {
                     // Horizontal wall
-
                     if (
                         ball.nextY + ballSize / 2 >= wall.y - wallWidth / 2 &&
                         ball.nextY - ballSize / 2 <= wall.y + wallWidth / 2
@@ -518,7 +514,7 @@ function main(timestamp) {
                                 ball.nextY = wall.y + wallWidth / 2 + ballSize / 2;
                             }
                             ball.y = ball.nextY;
-                            ball.velocityY = -ball.velocityY / 3;
+                            ball.velocityY = -ball.velocityY / 6;
                         }
                     }
                 } else {
@@ -603,7 +599,7 @@ function main(timestamp) {
                                 ball.nextX = wall.x + wallWidth / 2 + ballSize / 2;
                             }
                             ball.x = ball.nextX;
-                            ball.velocityX = -ball.velocityX / 3;
+                            ball.velocityX = -ball.velocityX / 6;
                         }
                     }
                 }
