@@ -24,6 +24,11 @@ body {
     height: 100%;
 }
 
+#game-container {
+    gap: 30px;
+    perspective: 600px;
+}
+
 #accelPermsButton {
     height: 50px;
     padding: 10px 20px; /* Add padding for better spacing */

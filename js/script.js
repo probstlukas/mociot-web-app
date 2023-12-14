@@ -337,7 +337,8 @@ function startGame() {
     if (!gameInProgress) {
         gameInProgress = true;
         window.requestAnimationFrame(main);
-        noteElement.style.opacity = 0;    
+        noteElement.style.opacity = 0.5;    
+        noteElement.innerHTML = "Good luck! <p><b>Hint:</b> it's easier to unite the balls first.</p>";
     }
 }
 
@@ -358,7 +359,7 @@ function resetGame() {
 
     mazeElement.style.cssText = `transform: rotateY(0deg) rotateX(0deg)`;
 
-    noteElement.innerHTML = `Move every ball to the center to win the game.`;
+    noteElement.innerHTML = "Move every ball to the center to win the game.";
     noteElement.style.opacity = 1;
 
     // Balls in the maze
@@ -619,7 +620,7 @@ function main(timestamp) {
 
     // Win detection
     if (balls.every((ball) => distance2D(ball, { x: 400 / 2, y: 400 / 2 }) < 75 / 2)) {
-        noteElement.innerHTML = `Success! You managed to get all four balls to the center.`;
+        noteElement.innerHTML = "Good job! <p>You managed to get all four balls to the center.</p>";
         noteElement.style.opacity = 1;
         gameInProgress = false;
     } else {
