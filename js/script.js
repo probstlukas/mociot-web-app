@@ -1,7 +1,28 @@
-// TODO: Clarify comments and use consistent type of comments
+/**
+ * MoCIoT Web App: Ball Maze Game
+ * 
+ * This script provides the core functionality for a ball maze game. The game consists of a maze with walls and paths, 
+ * where the player tilts their device to navigate balls through the maze towards a designated target. The script handles 
+ * the rendering of the maze, ball movement based on device orientation, collision detection with maze walls, and game state management.
+ * 
+ * Key Features:
+ *   - Device orientation detection to control ball movement.
+ *   - Collision detection with walls.
+ *   - Game state management for start, reset, and win conditions.
+ * 
+ * Dependencies:
+ *   - Assumes the presence of an HTML structure with specific IDs for the maze and UI elements.
+ *   - Relies on external CSS for styling of the maze, walls, and balls.
+ *   - Uses modern JavaScript ES6 features and may require a polyfill for compatibility with older browsers.
+ * 
+ * Assumptions:
+ *   - The device has hardware support for orientation detection.
+ *   - The browser has permission to access the device's orientation sensors.
+ */
 
 const mazeElement = document.getElementById("maze");
-const noteElement = document.getElementById("note"); // Note element for instructions and game won, game failed texts
+// Note element for instructions and game won, game failed texts
+const noteElement = document.getElementById("note");
 
 let previousTimestamp;
 let gameInProgress;
@@ -20,27 +41,55 @@ let ballElements = [];
 // Reset game at the beginning
 resetGame();
 
-/* 
-Defines a Math.minmax function that clamps a value within a symmetric range around zero.
-This function ensures that the given value does not exceed the specified limit or its negative.
-*/
+/**
+ * Defines a Math.minmax function that clamps a value within a symmetric range around zero.
+ * This function ensures that the given value does not exceed the specified limit or its negative.
+ *
+ * @param {number} value - The value to be clamped.
+ * @param {number} limit - The upper and lower symmetric limit for the clamping.
+ * @returns {number} The clamped value, which is within the range [-limit, limit].
+ */
 Math.minmax = (value, limit) => {
     return Math.max(Math.min(value, limit), -limit);
 };
 
-// Caculates distance with 2 dimensions
+/**
+ * Calculates the Euclidean distance between two points in 2D space.
+ * 
+ * @param {Object} p1 - The first point with properties x and y.
+ * @param {Object} p2 - The second point with properties x and y.
+ * @returns {number} The Euclidean distance between point p1 and p2.
+ */
 const distance2D = (p1, p2) => {
     return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
 };
 
-// Angle between the two points
+/**
+ * Calculates the angle between two points in a 2D space.
+ * This function computes the angle in radians between a line connecting two points (p1, p2) and the x-axis.
+ * The angle is calculated using the arctangent of the slope of the line.
+ * Adjustments are made to ensure the correct angle is returned when the second point lies to the left of the first point.
+ * 
+ * @param {Object} p1 - The first point, with properties 'x' and 'y'.
+ * @param {Object} p2 - The second point, with properties 'x' and 'y'.
+ * @returns {number} The angle in radians between the line connecting p1 and p2 and the x-axis.
+ */
 const getAngle = (p1, p2) => {
     let angle = Math.atan((p2.y - p1.y) / (p2.x - p1.x));
     if (p2.x - p1.x < 0) angle += Math.PI;
     return angle;
 };
 
-// The closest a ball and a wall cap can be
+/**
+ * Calculates the closest point a ball can be to a wall cap within the maze.
+ * This function determines the nearest position a ball can occupy relative to a wall cap without overlapping it,
+ * based on their respective sizes and the angle between them. The calculation involves finding the point on the 
+ * perimeter of an imaginary circle around the wall cap, which represents the closest approach of the ball's center.
+ * 
+ * @param {Object} cap - The wall cap, with properties 'x' and 'y' representing its coordinates.
+ * @param {Object} ball - The ball, with properties 'x' and 'y' representing its current coordinates.
+ * @returns {Object} An object containing the 'x' and 'y' coordinates of the closest point the ball can be to the wall cap.
+ */
 const closestItCanBe = (cap, ball) => {
     let angle = getAngle(cap, ball);
 
@@ -50,7 +99,18 @@ const closestItCanBe = (cap, ball) => {
     return { x: cap.x + deltaX, y: cap.y + deltaY };
 };
 
-// Roll the ball around the wall cap
+/**
+ * Determines the new position and velocity of a ball as it rolls around a wall cap.
+ * This function is used to simulate the rolling motion of a ball when it comes into contact with the end cap of a wall.
+ * It calculates the ball's new position and adjusted velocity based on its collision with the cap. 
+ * The calculations take into account the direction of the ball's impact, its intended heading, and the resulting angle 
+ * of deflection. The function also considers the velocity magnitude and how it is affected by the impact.
+ * 
+ * @param {Object} cap - The wall cap, with properties 'x' and 'y' representing its coordinates.
+ * @param {Object} ball - The ball, with properties 'x', 'y', 'velocityX', and 'velocityY'.
+ * @returns {Object} An object containing the new position ('x', 'y') and velocity ('velocityX', 'velocityY') of the ball,
+ *                   as well as the next anticipated position ('nextX', 'nextY').
+ */
 const rollAroundCap = (cap, ball) => {
     // The direction the ball can't move any further because the wall holds it back
     let impactAngle = getAngle(ball, cap);
@@ -61,9 +121,11 @@ const rollAroundCap = (cap, ball) => {
         { x: ball.velocityX, y: ball.velocityY }
     );
 
-    // The angle between the impact direction and the ball's desired direction
-    // The smaller this angle is, the bigger the impact
-    // The closer it is to 90 degrees the smoother it gets (at 90 there would be no collision)
+    /*
+    The angle between the impact direction and the ball's desired direction.
+    The smaller this angle is, the bigger the impact.
+    The closer it is to 90 degrees the smoother it gets (at 90 there would be no collision).
+    */
     let impactHeadingAngle = impactAngle - heading;
 
     // Velocity distance if not hit would have occurred
@@ -71,6 +133,7 @@ const rollAroundCap = (cap, ball) => {
         { x: 0, y: 0 },
         { x: ball.velocityX, y: ball.velocityY }
     );
+
     // Velocity component diagonal to the impact
     const velocityMagnitudeDiagonalToTheImpact =
         Math.sin(impactHeadingAngle) * velocityMagnitude;
@@ -97,14 +160,23 @@ const rollAroundCap = (cap, ball) => {
     return { x, y, velocityX, velocityY, nextX, nextY };
 };
 
-// Decreases the absolute value of a number but keeps it's sign, doesn't go below abs 0
+/**
+ * Reduces the absolute value of a number while preserving its sign, without going below zero.
+ * This function is used to gradually decrease a numeric value (such as velocity) over time, simulating a slowing effect.
+ * It decreases the number by a specified 'difference' value, but ensures that the number does not cross zero and flip sign.
+ * The function is particularly useful in scenarios where a gradual deceleration or fade-out effect is required.
+ * 
+ * @param {number} number - The original number to be slowed down.
+ * @param {number} difference - The amount by which the number should be reduced.
+ * @returns {number} The slowed down value of the original number.
+ */
 const slow = (number, difference) => {
     if (Math.abs(number) <= difference) return 0;
     if (number > difference) return number - difference;
     return number + difference;
 };
 
-/* Layout */
+/* LAYOUT */
 
 // Draw balls at the beginning
 balls.forEach(({ x, y }) => {
@@ -243,31 +315,25 @@ walls.forEach(({ x, y, horizontal, length }) => {
     mazeElement.appendChild(wall);
 });
 
-/* Accelerometer logic */
+/* ACCELEROMETER LOGIC */
 
-// var lastTiltLR = 0;
-// var lastTiltFB = 0;
-// var smoothingFactor = 0.1; // Adjust this value based on testing
-/*
-Determines the ball's movement based on the device's tilt
-*/
+/**
+ * Handles the device's orientation events to determine the movement of the ball in the maze.
+ * This function is triggered by the device's orientation sensors, specifically responding to changes in tilt.
+ * It calculates the rotation of the maze element based on the left/right (gamma) and front/back (beta) tilt of the device.
+ * Additionally, it computes the acceleration and friction applied to the ball due to the device's tilt, simulating gravity.
+ * These calculations are used to update the game state in the subsequent frame of the game loop.
+ * 
+ * @param {Object} event - The device orientation event containing information about the device's tilt.
+ *                          'gamma' represents the left/right tilt, and 'beta' represents the front/back tilt.
+ */
 function handleDeviceOrientation(event) {
-    var tiltLR = event.gamma; // Left/Right tilt in degrees
-    var tiltFB = event.beta;  // Front/Back tilt in degrees
+    // Left/Right tilt in degrees
+    var tiltLR = event.gamma;
+    // Front/Back tilt in degrees
+    var tiltFB = event.beta;
 
-    // tiltLR = tiltLR * smoothingFactor + lastTiltLR * (1 - smoothingFactor);
-    // tiltFB = tiltFB * smoothingFactor + lastTiltFB * (1 - smoothingFactor);
-
-    // lastTiltLR = tiltLR;
-    // lastTiltFB = tiltFB;
-
-    // Sensitivity factor for tilt
-    // var sensitivity = 0.5; // Adjust this value based on testing
-    var rotationFactor = 0.8; // Adjust this value based on testing
-
-    // Calculate acceleration based on tilt
-    // accelerationX = tiltLR * sensitivity;
-    // accelerationY = tiltFB * sensitivity;
+    var rotationFactor = 0.8;
 
     // Calculate rotation based on tilt
     const rotationY = tiltLR * rotationFactor;
@@ -292,7 +358,13 @@ function handleDeviceOrientation(event) {
     window.requestAnimationFrame(main);
 }
 
-/* Requesting permissions to access motion and orientation on iOS devices */
+/**
+ * Requests permission to access motion and orientation data on devices, especially iOS devices.
+ * This function checks if the DeviceMotionEvent.requestPermission method is available, which is
+ * particularly relevant for iOS devices starting from iOS 13, where permission is required to access device motion and orientation.
+ * If permission is required and granted, it adds an event listener for device orientation changes.
+ * If permission is not granted, it alerts the user. On non-iOS devices or older iOS versions, it directly adds the event listener.
+ */
 function getAccel() {
     if (typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -383,6 +455,14 @@ function resetGame() {
     }
 }
 
+/**
+ * The main game loop function, responsible for updating the game state in each frame.
+ * It calculates the movement of balls based on the current tilt of the device and applies physics, such as gravity and friction.
+ * The function handles collision detection with walls, updates ball positions, and checks for win conditions.
+ * If the game is in progress, it requests the next animation frame to continue the game loop.
+ * 
+ * @param {number} timestamp - The timestamp of the current frame, provided by requestAnimationFrame.
+ */
 function main(timestamp) {
     // It is possible to reset the game mid-game
     if (!gameInProgress) return;
@@ -393,11 +473,13 @@ function main(timestamp) {
         return;
     }
 
-    const maxVelocity = 0.5;
+    const maxVelocity = 0.25;
 
-    // Calculates the time elapsed since the last update cycle in terms of 'frame units'.
-    // Dividing the actual time elapsed (in ms) by 16 normalizes the value, so that
-    // a value of 1 represents the expected duration of a single frame (16 ms).
+    /*
+    Calculates the time elapsed since the last update cycle in terms of 'frame units'.
+    Dividing the actual time elapsed (in ms) by 16 normalizes the value, so that
+    a value of 1 represents the expected duration of a single frame (16 ms).
+    */
     const timeElapsed = (timestamp - previousTimestamp) / 16;
     
     if (accelerationX != undefined && accelerationY != undefined) {
@@ -408,8 +490,10 @@ function main(timestamp) {
 
         balls.forEach((ball) => {
             if (velocityChangeX == 0) {
-                // No rotation, the plane is flat
-                // On flat surface friction can only slow down, but not reverse movement
+                /* 
+                No rotation, the plane is flat.
+                On flat surface friction can only slow down, but not reverse movement.
+                */
                 ball.velocityX = slow(ball.velocityX, frictionDeltaX);
             } else {
                 ball.velocityX = ball.velocityX + velocityChangeX;
@@ -419,8 +503,10 @@ function main(timestamp) {
             }
 
             if (velocityChangeY == 0) {
-                // No rotation, the plane is flat
-                // On flat surface friction can only slow down, but not reverse movement
+                /*
+                No rotation, the plane is flat.
+                On flat surface friction can only slow down, but not reverse movement.
+                */
                 ball.velocityY = slow(ball.velocityY, frictionDeltaY);
             } else {
                 ball.velocityY = ball.velocityY + velocityChangeY;
@@ -429,8 +515,10 @@ function main(timestamp) {
                 ball.velocityY = Math.minmax(ball.velocityY, maxVelocity);
             }
 
-            // Preliminary next ball position, only becomes true if no hit occurs
-            // Used only for hit testing, does not mean that the ball will reach this position
+            /*
+            Preliminary next ball position, only becomes true if no hit occurs.
+            Used only for hit testing, does not mean that the ball will reach this position.
+            */
             ball.nextX = ball.x + ball.velocityX;
             ball.nextY = ball.y + ball.velocityY;
 
@@ -441,8 +529,10 @@ function main(timestamp) {
                         ball.nextY + ballSize / 2 >= wall.y - wallWidth / 2 &&
                         ball.nextY - ballSize / 2 <= wall.y + wallWidth / 2
                     ) {
-                        // Ball got within the strip of the wall
-                        // (not necessarily hit it, could be before or after)
+                        /*
+                        Ball got within the strip of the wall.
+                        (not necessarily hit it, could be before or after).
+                        */
 
                         const wallStart = {
                             x: wall.x,
@@ -520,14 +610,14 @@ function main(timestamp) {
                     }
                 } else {
                     // Vertical wall
-
                     if (
                         ball.nextX + ballSize / 2 >= wall.x - wallWidth / 2 &&
                         ball.nextX - ballSize / 2 <= wall.x + wallWidth / 2
                     ) {
-                        // Ball got within the strip of the wall
-                        // (not necessarily hit it, could be before or after)
-
+                        /*
+                        Ball got within the strip of the wall.
+                        (not necessarily hit it, could be before or after).
+                        */
                         const wallStart = {
                             x: wall.x,
                             y: wall.y,
@@ -547,7 +637,6 @@ function main(timestamp) {
                                 y: ball.nextY,
                             });
                             if (distance < ballSize / 2 + wallWidth / 2) {
-
                                 // Ball hits the left cap of a horizontal wall
                                 const closest = closestItCanBe(wallStart, {
                                     x: ball.nextX,
